@@ -9,7 +9,7 @@ import java.util.List;
 
 public abstract class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
 
-    public DatabaseUtils databaseUtils;
+    protected DatabaseUtils databaseUtils;
 
     @Autowired
     public void setConnectionUtils(DatabaseUtils databaseUtils) {
