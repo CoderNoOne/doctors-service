@@ -4,18 +4,17 @@ import com.app.application.dto.SearchByFieldValueDto;
 import com.app.application.dto.SearchByFieldValuesDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.text.MessageFormat;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -63,38 +62,46 @@ public class DatabaseUtils {
 
     public <T, E> CompletionStage<List<T>> findByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass) {
 
-        return doInStatelessSession(session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1}= :{1}", entityClass.getSimpleName(), field.getName()), entityClass)
-                .setParameter(field.getName(), field.getValue())
+        return doInStatelessSession(session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1}= :{1}", entityClass.getSimpleName(), field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
                 .getResultList());
     }
 
 
     public <T, E> CompletionStage<T> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass) {
 
-        return doInSession((session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1}= :{1}", entityClass.getSimpleName(), field.getName()), entityClass)
-                .setParameter(field.getName(), field.getValue())
+        return doInSession((session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1}= :{1}", entityClass.getSimpleName(), field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
                 .getSingleResultOrNull()));
     }
 
 
     public <T, E> CompletionStage<T> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch) {
 
-        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getName()), entityClass)
-                .setParameter(field.getName(), field.getValue())
+        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
                 .getSingleResultOrNull());
     }
 
     public <T, E, R> CompletionStage<R> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch, Function<T, R> mapper) {
 
-        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getName()), entityClass)
-                .setParameter(field.getName(), field.getValue())
+        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
                 .getSingleResultOrNull()
                 .thenApply(mapper));
     }
 
-    public <T, E> CompletionStage<List<T>> findByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass, String fieldToFetch) {
+    public <T, E> CompletionStage<List<T>> findByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass, String... fieldsToFetch) {
 
-        return doInSession(session -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2} in (:{2})", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
+        final var fetchCommands = Optional.ofNullable(fieldsToFetch)
+                .map(Arrays::stream)
+                .map(stream -> stream
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.joining(" join fetch e.", "join fetch e.", "")))
+                .orElse("");
+
+        return doInSession(session -> session.createQuery(MessageFormat.format("select e from {0} e {1} where e.{2} in (:{2})", entityClass.getSimpleName(), fetchCommands, field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValues())
                 .getResultList());
     }

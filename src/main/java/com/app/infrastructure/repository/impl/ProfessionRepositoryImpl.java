@@ -1,13 +1,11 @@
 package com.app.infrastructure.repository.impl;
 
-import com.app.application.dto.ProfessionDetailsDto;
 import com.app.application.dto.SearchByFieldValueDto;
 import com.app.application.dto.SearchByFieldValuesDto;
 import com.app.domain.generic.AbstractCrudRepository;
 import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
 import com.app.infrastructure.enums.ProfessionFieldsToFetch;
-import com.app.infrastructure.utils.DatabaseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -26,12 +24,12 @@ public class ProfessionRepositoryImpl extends AbstractCrudRepository<Profession,
 
         return Mono.fromCompletionStage(
                 databaseUtils
-                        .findByFieldValues(SearchByFieldValuesDto
-                                        .<String>builder()
+                        .findByFieldValues(SearchByFieldValuesDto.<String>builder()
                                         .fieldName(PROFESSION_NAME)
                                         .fieldValues(names)
                                         .build(),
-                                Profession.class, ProfessionFieldsToFetch.DOCTORS.getFieldName()))
+                                Profession.class,
+                                ProfessionFieldsToFetch.DOCTORS.getFieldName()))
                 .flatMapMany(Flux::fromIterable);
     }
 
@@ -40,10 +38,11 @@ public class ProfessionRepositoryImpl extends AbstractCrudRepository<Profession,
 
         return Mono.fromCompletionStage(databaseUtils.findOneByFieldValue(
                 SearchByFieldValueDto.<String>builder()
-                        .name(PROFESSION_NAME)
-                        .value(name)
+                        .fieldName(PROFESSION_NAME)
+                        .fieldValue(name)
                         .build(),
-                Profession.class,ProfessionFieldsToFetch.DOCTORS.getFieldName()
+                Profession.class,
+                ProfessionFieldsToFetch.DOCTORS.getFieldName()
         ));
     }
 }

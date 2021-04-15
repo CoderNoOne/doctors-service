@@ -8,6 +8,6 @@ import lombok.*;
 @Data
 public class SearchByFieldValueDto<T> {
 
-    private String name;
-    private T value;
+    private String fieldName;
+    private T fieldValue;
 }
