@@ -92,9 +92,9 @@ public class DatabaseUtils {
                 .thenApply(mapper));
     }
 
-    public <T, E> CompletionStage<List<T>> findByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass) {
+    public <T, E> CompletionStage<List<T>> findByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass, String fieldToFetch) {
 
-        return doInStatelessSession(session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1} in (:{1})", entityClass.getSimpleName(), field.getFieldName()), entityClass)
+        return doInSession(session -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2} in (:{2})", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValues())
                 .getResultList());
     }

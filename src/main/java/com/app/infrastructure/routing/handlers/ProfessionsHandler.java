@@ -3,6 +3,7 @@ package com.app.infrastructure.routing.handlers;
 import com.app.application.service.ProfessionService;
 import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -10,6 +11,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.function.Function;
 
 @Component
@@ -23,8 +25,7 @@ public class ProfessionsHandler {
 
         return RoutingHandlersUtils.toServerResponse(
                 serverRequest
-                        .bodyToFlux(String.class)
-                        .collectList()
+                        .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
                         .map(professionService::getAllProfessionByNames)
                         .flatMapMany(Function.identity())
                         .collectList(),

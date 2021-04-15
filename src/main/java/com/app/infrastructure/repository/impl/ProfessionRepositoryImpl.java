@@ -6,6 +6,7 @@ import com.app.application.dto.SearchByFieldValuesDto;
 import com.app.domain.generic.AbstractCrudRepository;
 import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
+import com.app.infrastructure.enums.ProfessionFieldsToFetch;
 import com.app.infrastructure.utils.DatabaseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -30,7 +31,7 @@ public class ProfessionRepositoryImpl extends AbstractCrudRepository<Profession,
                                         .fieldName(PROFESSION_NAME)
                                         .fieldValues(names)
                                         .build(),
-                                Profession.class))
+                                Profession.class, ProfessionFieldsToFetch.DOCTORS.getFieldName()))
                 .flatMapMany(Flux::fromIterable);
     }
 
@@ -42,20 +43,7 @@ public class ProfessionRepositoryImpl extends AbstractCrudRepository<Profession,
                         .name(PROFESSION_NAME)
                         .value(name)
                         .build(),
-                Profession.class
+                Profession.class,ProfessionFieldsToFetch.DOCTORS.getFieldName()
         ));
     }
-
-//    @Override
-//    public Mono<ProfessionDetailsDto> findProfessionDetailsByName(String name) {
-//
-//        return Mono.fromCompletionStage(databaseUtils.findOneByFieldValue(
-//                SearchByFieldValueDto.<String>builder()
-//                        .name(PROFESSION_NAME)
-//                        .value(name)
-//                        .build(),
-//                Profession.class,
-//                "doctors"
-//        )).map(Profession::toDetails);
-//    }
 }
