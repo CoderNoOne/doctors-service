@@ -2,7 +2,6 @@ package com.app.application.service;
 
 import com.app.application.dto.CreateDoctorDto;
 import com.app.application.dto.DoctorDetails;
-import com.app.application.dto.DoctorDto;
 import com.app.application.dto.ProfessionDto;
 import com.app.application.exception.NotFoundException;
 import com.app.domain.doctor.Doctor;
@@ -19,7 +18,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.*;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +29,7 @@ public class DoctorService {
     private final Stage.SessionFactory sessionFactory;
     private final ProfessionRepository professionRepository;
 
+
     public Mono<DoctorDetails> saveDoctor(final CreateDoctorDto createDoctorDto) {
 
 
@@ -39,10 +38,8 @@ public class DoctorService {
                 {
                     final Doctor doctorToSave = createDoctorDto.toEntity();
                     final List<String> professionsNames = createDoctorDto.getProfessions().stream().map(ProfessionDto::getName).collect(Collectors.toList());
-                    final CriteriaQuery<Profession> query = sessionFactory.getCriteriaBuilder().createQuery(Profession.class);
-                    final Root<Profession> profession = query.from(Profession.class);
 
-                    final CompletionStage<List<Profession>> professionsFromDb = session.createQuery(query.where(profession.get("name").in(professionsNames))).getResultList();
+                    final CompletionStage<List<Profession>> professionsFromDb = getExistingProfessionsFromDB(session, professionsNames);
 
                     return professionsFromDb
                             .thenCompose(professions -> {
@@ -115,16 +112,12 @@ public class DoctorService {
                     );
 
             final List<String> allProfessionsName = professionsGroupedByDoctor.values().stream().flatMap(Collection::stream).map(ProfessionDto::getName).collect(Collectors.toList());
-
-            final CriteriaQuery<Profession> query = sessionFactory.getCriteriaBuilder().createQuery(Profession.class);
-            final Root<Profession> profession = query.from(Profession.class);
-
-            final CompletionStage<List<Profession>> professionsFromDb = session.createQuery(query.where(profession.get("name").in(allProfessionsName))).getResultList();
+            final CompletionStage<List<Profession>> professionsFromDb = getExistingProfessionsFromDB(session, allProfessionsName);
 
             return professionsFromDb
                     .thenCompose(professions -> {
                         allProfessionsName.removeIf(pn -> professions.stream().anyMatch(prDB -> prDB.getName().equals(pn)));
-                        final List<Profession> professionsToSave = allProfessionsName.stream().map(name -> Profession.builder().name(name).build()).collect(Collectors.toList());
+                        final List<Profession> professionsToSave = allProfessionsName.stream().map(name -> Profession.builder().name(name).build()).distinct().collect(Collectors.toList());
                         List<Profession> updatedProfessions = new ArrayList<>();
 
                         return session.persist(professionsToSave.toArray())
@@ -151,5 +144,13 @@ public class DoctorService {
         }))
                 .flatMapMany(Flux::fromIterable)
                 .map(Doctor::toDetails);
+    }
+
+    private CompletionStage<List<Profession>> getExistingProfessionsFromDB(Stage.Session session, List<String> professionsNames) {
+
+        final CriteriaQuery<Profession> query = sessionFactory.getCriteriaBuilder().createQuery(Profession.class);
+        final Root<Profession> profession = query.from(Profession.class);
+
+        return session.createQuery(query.where(profession.get("name").in(professionsNames))).getResultList();
     }
 }
