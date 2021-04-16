@@ -6,9 +6,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface CrudRepository<T, ID> {
-    Mono<T> addOrUpdate(T item);
+    Mono<T> add(T item);
 
-    Flux<T> addOrUpdateMany(List<T> items);
+    Flux<T> addMany(List<T> items);
 
     Flux<T> findAll();
 

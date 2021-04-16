@@ -6,6 +6,7 @@ import com.app.domain.doctor.Doctor;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Set;
 
 
@@ -43,7 +44,7 @@ public class Profession {
         return ProfessionDetailsDto.builder()
                 .id(id)
                 .name(name)
-                .doctors(doctors.stream().map(Doctor::toDto).toList())
+                .doctors(doctors != null ? doctors.stream().map(Doctor::toDto).toList() : new ArrayList<>())
                 .build();
     }
 }

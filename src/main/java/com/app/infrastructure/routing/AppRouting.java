@@ -27,7 +27,8 @@ public class AppRouting {
     @Bean
     public RouterFunction<ServerResponse> professionsRoute(ProfessionsHandler professionsHandler) {
         return route(GET("/professions/filter/names").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::getAllProfessionByNames)
-                .andRoute(GET("/professions/name/{name}").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::getProfessionDetailsByName);
+                .andRoute(GET("/professions/name/{name}").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::getProfessionDetailsByName)
+                .andRoute(POST("/professions").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::createProfession);
 
     }
 

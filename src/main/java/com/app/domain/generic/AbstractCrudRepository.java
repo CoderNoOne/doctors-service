@@ -17,12 +17,12 @@ public abstract class AbstractCrudRepository<T, ID> implements CrudRepository<T,
     }
 
     @Override
-    public Mono<T> addOrUpdate(T item) {
+    public Mono<T> add(T item) {
         return Mono.fromCompletionStage(databaseUtils.saveEntity(item));
     }
 
     @Override
-    public Flux<T> addOrUpdateMany(List<T> items) {
+    public Flux<T> addMany(List<T> items) {
         return Mono.fromCompletionStage(databaseUtils.saveEntities(items))
                 .flatMapMany(Flux::fromIterable);
     }

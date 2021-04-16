@@ -83,6 +83,15 @@ public class DatabaseUtils {
                 .getSingleResultOrNull());
     }
 
+//    public <T> CompletionStage<T> findOneByFieldValue(String searchQuery, Class<T> entityClass, String fieldToFetch) {
+//
+//
+//        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} :{2} ", entityClass.getSimpleName(), fieldToFetch, searchQuery), entityClass)
+//                .setParameter(searchQuery, searchQuery)
+//                .getSingleResultOrNull());
+//    }
+
+
     public <T, E, R> CompletionStage<R> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch, Function<T, R> mapper) {
 
         return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)

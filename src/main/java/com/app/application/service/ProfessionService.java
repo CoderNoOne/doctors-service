@@ -1,7 +1,8 @@
 package com.app.application.service;
 
+import com.app.application.dto.CreateProfessionDto;
 import com.app.application.dto.ProfessionDetailsDto;
-import com.app.application.exception.NotFoundException;
+import com.app.application.dto.ProfessionDto;
 import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +25,17 @@ public class ProfessionService {
 
     }
 
-    public Mono<ProfessionDetailsDto> findByName(String name) {
+    public Mono<ProfessionDetailsDto> findByNameWithFetchedDoctors(String name) {
 
         return professionRepository.findByName(name)
-                .map(Profession::toDetails)
-                .switchIfEmpty(Mono.error(() -> new NotFoundException("No profession with name: %s".formatted(name))));
+                .map(Profession::toDetails);
+
+    }
+
+    public Mono<ProfessionDto> saveProfession(CreateProfessionDto createProfessionDto) {
+
+        return professionRepository.add(createProfessionDto.toEntity())
+                .map(Profession::toDto);
 
     }
 }

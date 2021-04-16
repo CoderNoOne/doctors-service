@@ -27,7 +27,8 @@ public class Doctor {
     private String firstName;
     private String lastName;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
+    @Setter
+    @ManyToMany
     @JoinTable(
             name = "doctors_professions",
             joinColumns = @JoinColumn(name = "doctor_id", referencedColumnName = "id"),
@@ -40,7 +41,7 @@ public class Doctor {
                 .id(id)
                 .firstName(firstName)
                 .lastName(lastName)
-                .professions(Objects.nonNull(professions) ? professions.stream().map(Profession::toDto).toList(): new ArrayList<>())
+                .professions(Objects.nonNull(professions) ? professions.stream().map(Profession::toDto).toList() : new ArrayList<>())
                 .build();
     }
 
