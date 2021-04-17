@@ -115,7 +115,7 @@ public class DoctorService {
                             Collectors.flatMapping(dto -> Objects.isNull(dto.getProfessions()) ? Stream.empty() : dto.getProfessions().stream(), Collectors.toList()))
                     );
 
-            final List<String> allProfessionsName = professionsGroupedByDoctor.values().stream().flatMap(Collection::stream).map(ProfessionDto::getName).collect(Collectors.toList());
+            final List<String> allProfessionsName = professionsGroupedByDoctor.values().stream().mapMulti(Iterable::forEach).map(obj -> obj instanceof ProfessionDto p ? p : null).filter(Objects::nonNull).map(ProfessionDto::getName).collect(Collectors.toList());
             final CompletionStage<List<Profession>> professionsFromDb = getExistingProfessionsFromDB(session, allProfessionsName);
 
             return professionsFromDb
@@ -160,6 +160,7 @@ public class DoctorService {
 
     public Mono<DoctorDetails> addProfessionForDoctor(final CreateProfessionDto createProfessionDto, final Long doctorId) {
 
+
         return Mono.fromCompletionStage(sessionFactory.withTransaction(
 
                 (session, transaction) ->
@@ -186,8 +187,6 @@ public class DoctorService {
                                                 .thenCompose(professionFromDB -> {
                                                     if (Objects.nonNull(professionFromDB)) {
                                                         doctorFromDB.getProfessions().add(professionFromDB);
-                                                        return session.persist(doctorFromDB)
-                                                                .thenApply(y -> doctorFromDB);
                                                     }
                                                     return CompletableFuture.completedFuture(doctorFromDB);
                                                 }))
@@ -201,6 +200,5 @@ public class DoctorService {
                                         }
                                 )))
                 .map(Doctor::toDetails);
-
     }
 }
