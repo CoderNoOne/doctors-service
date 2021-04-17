@@ -115,7 +115,12 @@ public class DoctorService {
                             Collectors.flatMapping(dto -> Objects.isNull(dto.getProfessions()) ? Stream.empty() : dto.getProfessions().stream(), Collectors.toList()))
                     );
 
-            final List<String> allProfessionsName = professionsGroupedByDoctor.values().stream().mapMulti(Iterable::forEach).map(obj -> obj instanceof ProfessionDto p ? p : null).filter(Objects::nonNull).map(ProfessionDto::getName).collect(Collectors.toList());
+            final List<String> allProfessionsName = professionsGroupedByDoctor.values()
+                    .stream()
+                    .<ProfessionDto>mapMulti(Iterable::forEach)
+                    .map(ProfessionDto::getName)
+                    .collect(Collectors.toList());
+
             final CompletionStage<List<Profession>> professionsFromDb = getExistingProfessionsFromDB(session, allProfessionsName);
 
             return professionsFromDb
