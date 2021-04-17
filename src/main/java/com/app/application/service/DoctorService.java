@@ -1,13 +1,12 @@
 package com.app.application.service;
 
 import com.app.application.dto.CreateDoctorDto;
+import com.app.application.dto.CreateProfessionDto;
 import com.app.application.dto.DoctorDetails;
 import com.app.application.dto.ProfessionDto;
 import com.app.application.exception.NotFoundException;
 import com.app.domain.doctor.Doctor;
-import com.app.domain.doctor.DoctorRepository;
 import com.app.domain.profession.Profession;
-import com.app.domain.profession.ProfessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,10 @@ import reactor.core.publisher.Mono;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,10 +27,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DoctorService {
 
-    private final DoctorRepository doctorRepository;
     private final Stage.SessionFactory sessionFactory;
-    private final ProfessionRepository professionRepository;
-
 
     public Mono<DoctorDetails> saveDoctor(final CreateDoctorDto createDoctorDto) {
 
@@ -45,7 +44,7 @@ public class DoctorService {
                             .thenCompose(professions -> {
                                 professionsNames.removeIf(pn -> professions.stream().anyMatch(prDB -> prDB.getName().equals(pn)));
                                 final List<Profession> professionsToSave = professionsNames.stream().map(name -> Profession.builder().name(name).build()).collect(Collectors.toList());
-                                List<Profession> updatedProfessions = new ArrayList<>();
+                                final List<Profession> updatedProfessions = new ArrayList<>();
 
 
                                 return session.persist(professionsToSave.toArray())
@@ -89,12 +88,18 @@ public class DoctorService {
     public Flux<ProfessionDto> getDoctorProfessionsByDoctorId(final Long id) {
 
         return Mono.fromCompletionStage(sessionFactory.withSession(
-                session -> session
-                        .createQuery("select d from Doctor d join fetch d.professions where d.id = :id", Doctor.class)
-                        .setParameter("id", id)
-                        .getSingleResultOrNull()))
-                .switchIfEmpty(Mono.error(() -> new NotFoundException("No doctor with id: %d".formatted(id))))
-                .map(Doctor::getProfessions)
+                session ->
+                        session.find(Doctor.class, id)
+                                .thenCompose(d -> {
+                                            if (Objects.nonNull(d)) {
+                                                return session
+                                                        .createQuery("select p from Profession p where :d member of p.doctors", Profession.class)
+                                                        .setParameter("d", d)
+                                                        .getResultList();
+                                            }
+                                            throw new NotFoundException("No doctor with id: %d".formatted(id));
+                                        }
+                                )))
                 .flatMapMany(Flux::fromIterable)
                 .map(Profession::toDto);
 
@@ -107,7 +112,7 @@ public class DoctorService {
             final Map<CreateDoctorDto, List<ProfessionDto>> professionsGroupedByDoctor = createDoctorDtoList
                     .stream()
                     .collect(Collectors.groupingBy(
-                            dto -> dto,
+                            Function.identity(),
                             Collectors.flatMapping(dto -> Objects.isNull(dto.getProfessions()) ? Stream.empty() : dto.getProfessions().stream(), Collectors.toList()))
                     );
 
@@ -118,7 +123,7 @@ public class DoctorService {
                     .thenCompose(professions -> {
                         allProfessionsName.removeIf(pn -> professions.stream().anyMatch(prDB -> prDB.getName().equals(pn)));
                         final List<Profession> professionsToSave = allProfessionsName.stream().map(name -> Profession.builder().name(name).build()).distinct().collect(Collectors.toList());
-                        List<Profession> updatedProfessions = new ArrayList<>();
+                        final List<Profession> updatedProfessions = new ArrayList<>();
 
                         return session.persist(professionsToSave.toArray())
                                 .thenApply(nth -> {
@@ -153,4 +158,60 @@ public class DoctorService {
 
         return session.createQuery(query.where(profession.get("name").in(professionsNames))).getResultList();
     }
+
+    public Mono<DoctorDetails> addProfessionForDoctor(final CreateProfessionDto createProfessionDto, final Long doctorId) {
+
+        return Mono.fromCompletionStage(sessionFactory.withTransaction(
+
+                (session, transaction) -> {
+                    AtomicBoolean saved = new AtomicBoolean(false);
+
+
+                    return session.createQuery("select d from Doctor d where d.id = :id", Doctor.class)
+                            .setParameter("id", doctorId)
+                            .getSingleResultOrNull()
+                            .thenApply(doctorFromDB -> {
+                                if (Objects.nonNull(doctorFromDB)) {
+                                    return doctorFromDB;
+                                }
+                                throw new NotFoundException("No doctor with id: %d".formatted(doctorId));
+                            })
+                            .thenCompose(doctor -> session.fetch(doctor.getProfessions()).thenApply(professions -> doctor))
+                            .thenApply(doctor -> {
+                                if (doctor.getProfessions().stream().anyMatch(profession -> profession.getName().equals(createProfessionDto.getName()))) {
+                                    throw new NotFoundException("Doctor already has the profession: %s".formatted(createProfessionDto.getName()));
+                                }
+                                return doctor;
+                            })
+                            .thenCompose(doctorFromDB ->
+                                    session.createQuery("select p from Profession p where p.name = :name", Profession.class)
+                                            .setParameter("name", createProfessionDto.getName())
+                                            .getSingleResultOrNull()
+                                            .thenCompose(professionFromDB -> {
+                                                if (Objects.nonNull(professionFromDB)) {
+                                                    saved.set(true);
+                                                    doctorFromDB.getProfessions().add(professionFromDB);
+                                                    professionFromDB.getDoctors().add(doctorFromDB);
+                                                    return session.persist(doctorFromDB)
+                                                            .thenApply(y -> doctorFromDB);
+                                                }
+                                                return CompletableFuture.completedFuture(doctorFromDB);
+                                            }))
+                            .thenCompose(doctor -> {
+                                if (!saved.get()) {
+                                    final Profession professionToSave = createProfessionDto.toEntity();
+                                    return session.persist(professionToSave)
+                                            .thenApply(nth -> {
+                                                doctor.getProfessions().add(professionToSave);
+                                                return doctor;
+                                            });
+                                }
+                                return CompletableFuture.completedFuture(doctor);
+                            });
+                }))
+                .map(Doctor::toDetails);
+
+
+    }
+
 }

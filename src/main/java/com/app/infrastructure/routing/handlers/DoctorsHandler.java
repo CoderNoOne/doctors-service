@@ -1,7 +1,9 @@
 package com.app.infrastructure.routing.handlers;
 
 import com.app.application.dto.CreateDoctorDto;
+import com.app.application.dto.CreateProfessionDto;
 import com.app.application.service.DoctorService;
+import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -66,5 +68,12 @@ public class DoctorsHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(BodyInserters.fromValue(list))
                 );
+    }
+
+    public Mono<ServerResponse> addProfessionForDoctor(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils.toServerResponse(serverRequest.bodyToMono(CreateProfessionDto.class)
+                        .flatMap(dto -> doctorService.addProfessionForDoctor(dto, Long.parseLong(serverRequest.pathVariable("doctorId")))),
+                HttpStatus.OK);
     }
 }

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 @AllArgsConstructor
@@ -19,7 +20,7 @@ public class CreateProfessionDto {
     public Profession toEntity() {
         return Profession.builder()
                 .name(name)
-                .doctors(Collections.emptySet())
+                .doctors(new ArrayList<>())
                 .build();
     }
 }

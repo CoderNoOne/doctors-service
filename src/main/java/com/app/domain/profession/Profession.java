@@ -7,6 +7,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -30,7 +31,7 @@ public class Profession {
     @ManyToMany(mappedBy = "professions")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Doctor> doctors;
+    private List<Doctor> doctors;
 
     public ProfessionDto toDto() {
         return ProfessionDto.builder()
