@@ -18,7 +18,6 @@ import javax.persistence.criteria.Root;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -163,55 +162,45 @@ public class DoctorService {
 
         return Mono.fromCompletionStage(sessionFactory.withTransaction(
 
-                (session, transaction) -> {
-                    AtomicBoolean saved = new AtomicBoolean(false);
-
-
-                    return session.createQuery("select d from Doctor d where d.id = :id", Doctor.class)
-                            .setParameter("id", doctorId)
-                            .getSingleResultOrNull()
-                            .thenApply(doctorFromDB -> {
-                                if (Objects.nonNull(doctorFromDB)) {
-                                    return doctorFromDB;
-                                }
-                                throw new NotFoundException("No doctor with id: %d".formatted(doctorId));
-                            })
-                            .thenCompose(doctor -> session.fetch(doctor.getProfessions()).thenApply(professions -> doctor))
-                            .thenApply(doctor -> {
-                                if (doctor.getProfessions().stream().anyMatch(profession -> profession.getName().equals(createProfessionDto.getName()))) {
-                                    throw new NotFoundException("Doctor already has the profession: %s".formatted(createProfessionDto.getName()));
-                                }
-                                return doctor;
-                            })
-                            .thenCompose(doctorFromDB ->
-                                    session.createQuery("select p from Profession p where p.name = :name", Profession.class)
-                                            .setParameter("name", createProfessionDto.getName())
-                                            .getSingleResultOrNull()
-                                            .thenCompose(professionFromDB -> {
-                                                if (Objects.nonNull(professionFromDB)) {
-                                                    saved.set(true);
-                                                    doctorFromDB.getProfessions().add(professionFromDB);
-                                                    professionFromDB.getDoctors().add(doctorFromDB);
-                                                    return session.persist(doctorFromDB)
-                                                            .thenApply(y -> doctorFromDB);
-                                                }
-                                                return CompletableFuture.completedFuture(doctorFromDB);
-                                            }))
-                            .thenCompose(doctor -> {
-                                if (!saved.get()) {
-                                    final Profession professionToSave = createProfessionDto.toEntity();
-                                    return session.persist(professionToSave)
-                                            .thenApply(nth -> {
-                                                doctor.getProfessions().add(professionToSave);
-                                                return doctor;
-                                            });
-                                }
-                                return CompletableFuture.completedFuture(doctor);
-                            });
-                }))
+                (session, transaction) ->
+                        session.createQuery("select d from Doctor d where d.id = :id", Doctor.class)
+                                .setParameter("id", doctorId)
+                                .getSingleResultOrNull()
+                                .thenApply(doctorFromDB -> {
+                                    if (Objects.nonNull(doctorFromDB)) {
+                                        return doctorFromDB;
+                                    }
+                                    throw new NotFoundException("No doctor with id: %d".formatted(doctorId));
+                                })
+                                .thenCompose(doctor -> session.fetch(doctor.getProfessions()).thenApply(professions -> doctor))
+                                .thenApply(doctor -> {
+                                    if (doctor.getProfessions().stream().anyMatch(profession -> profession.getName().equals(createProfessionDto.getName()))) {
+                                        throw new NotFoundException("Doctor already has the profession: %s".formatted(createProfessionDto.getName()));
+                                    }
+                                    return doctor;
+                                })
+                                .thenCompose(doctorFromDB ->
+                                        session.createQuery("select p from Profession p where p.name = :name", Profession.class)
+                                                .setParameter("name", createProfessionDto.getName())
+                                                .getSingleResultOrNull()
+                                                .thenCompose(professionFromDB -> {
+                                                    if (Objects.nonNull(professionFromDB)) {
+                                                        doctorFromDB.getProfessions().add(professionFromDB);
+                                                        return session.persist(doctorFromDB)
+                                                                .thenApply(y -> doctorFromDB);
+                                                    }
+                                                    return CompletableFuture.completedFuture(doctorFromDB);
+                                                }))
+                                .thenCompose(doctor -> {
+                                            final Profession professionToSave = createProfessionDto.toEntity();
+                                            return session.persist(professionToSave)
+                                                    .thenApply(nth -> {
+                                                        doctor.getProfessions().add(professionToSave);
+                                                        return doctor;
+                                                    });
+                                        }
+                                )))
                 .map(Doctor::toDetails);
 
-
     }
-
 }
