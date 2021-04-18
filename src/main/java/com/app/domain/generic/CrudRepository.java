@@ -1,22 +1,21 @@
 package com.app.domain.generic;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 
 public interface CrudRepository<T, ID> {
-    Mono<T> add(T item);
+    CompletionStage<T> add(T item);
 
-    Flux<T> addMany(List<T> items);
+    CompletionStage<List<T>> addMany(List<T> items);
 
-    Flux<T> findAll();
+    CompletionStage<List<T>> findAll();
 
-    Mono<T> findById(ID id);
+    CompletionStage<T> findById(ID id);
 
-    Flux<T> findAllById(List<ID> ids);
+    CompletionStage<List<T>> findAllById(List<ID> ids);
 
-    Mono<T> deleteById(ID id);
+    CompletionStage<T> deleteById(ID id);
 
-    Flux<T> deleteAllById(List<ID> ids);
+    CompletionStage<List<T>> deleteAllById(List<ID> ids);
+
 }

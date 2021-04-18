@@ -1,38 +1,71 @@
 package com.app.infrastructure.repository.impl;
 
+import com.app.application.dto.SearchByFieldValueDto;
 import com.app.domain.doctor.Doctor;
 import com.app.domain.doctor.DoctorRepository;
-import com.app.domain.generic.AbstractCrudRepository;
+import com.app.infrastructure.enums.DoctorsFieldsToFetch;
+import com.app.infrastructure.utils.DatabaseUtils;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 
 
 @Repository
 @RequiredArgsConstructor
-public class DoctorRepositoryImpl extends AbstractCrudRepository<Doctor, Long> implements DoctorRepository {
+public class DoctorRepositoryImpl implements DoctorRepository {
 
+    private final DatabaseUtils databaseUtils;
+    private final Stage.SessionFactory sessionFactory;
 
     @Override
-    public Flux<Doctor> findAll() {
+    public CompletionStage<Doctor> add(Doctor doctor) {
+        return databaseUtils.saveEntity(doctor);
+    }
+
+    @Override
+    public CompletionStage<List<Doctor>> addMany(List<Doctor> doctors) {
+        return databaseUtils.saveEntities(doctors);
+    }
+
+    @Override
+    public CompletionStage<List<Doctor>> findAll() {
+        return sessionFactory.withSession(
+                session -> session
+                        .createQuery("select d from Doctor d join fetch d.professions", Doctor.class)
+                        .getResultList());
+    }
+
+    @Override
+    public CompletionStage<Doctor> findById(Long id) {
+
+        return databaseUtils
+                .findOneByFieldValue(SearchByFieldValueDto.<Long>builder()
+                                .fieldName("id")
+                                .fieldValue(id)
+                                .build(),
+                        Doctor.class,
+                        DoctorsFieldsToFetch.PROFESSIONS.getFieldName(),
+                        Function.identity()
+                );
+
+    }
+
+    @Override
+    public CompletionStage<List<Doctor>> findAllById(List<Long> longs) {
         return null;
     }
 
     @Override
-    public Flux<Doctor> findAllById(List<Long> longs) {
+    public CompletionStage<Doctor> deleteById(Long aLong) {
         return null;
     }
 
     @Override
-    public Mono<Doctor> deleteById(Long aLong) {
-        return null;
-    }
-
-    @Override
-    public Flux<Doctor> deleteAllById(List<Long> longs) {
+    public CompletionStage<List<Doctor>> deleteAllById(List<Long> longs) {
         return null;
     }
 }

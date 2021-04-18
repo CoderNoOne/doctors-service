@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +26,7 @@ public class CreateDoctorDto {
         return Doctor.builder()
                 .firstName(firstName)
                 .lastName(lastName)
-                .professions(Objects.nonNull(professions) ? professions.stream().map(ProfessionDto::toEntity).toList() : new ArrayList<>())
+                .professions(Objects.nonNull(professions) ? professions.stream().map(ProfessionDto::toEntity).collect(Collectors.toList())  : new ArrayList<>())
                 .build();
     }
 }

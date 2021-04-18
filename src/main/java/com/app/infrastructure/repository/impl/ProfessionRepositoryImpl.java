@@ -1,44 +1,47 @@
 package com.app.infrastructure.repository.impl;
 
+import com.app.application.dto.SearchByFieldValuesDto;
 import com.app.application.exception.NotFoundException;
 import com.app.application.exception.ProfessionAlreadyExistsException;
+import com.app.domain.doctor.Doctor;
 import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
+import com.app.infrastructure.enums.ProfessionFieldsToFetch;
+import com.app.infrastructure.utils.DatabaseUtils;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletionStage;
 
 @Repository
 @RequiredArgsConstructor
 public class ProfessionRepositoryImpl implements ProfessionRepository {
 
     private static final String PROFESSION_NAME = "name";
+    private final DatabaseUtils databaseUtils;
     private final Stage.SessionFactory sessionFactory;
 
     @Override
-    public Flux<Profession> findAllByNames(List<String> names) {
+    public CompletionStage<List<Profession>> findAllByNames(List<String> names) {
 
-        return Flux.empty();
-//        return Mono.fromCompletionStage(
-//                databaseUtils
-//                        .findByFieldValues(SearchByFieldValuesDto.<String>builder()
-//                                        .fieldName(PROFESSION_NAME)
-//                                        .fieldValues(names)
-//                                        .build(),
-//                                Profession.class,
-//                                ProfessionFieldsToFetch.DOCTORS.getFieldName()))
-//                .flatMapMany(Flux::fromIterable);
+        return
+                databaseUtils
+                        .findByFieldValues(SearchByFieldValuesDto.<String>builder()
+                                        .fieldName(PROFESSION_NAME)
+                                        .fieldValues(names)
+                                        .build(),
+                                Profession.class,
+                                ProfessionFieldsToFetch.DOCTORS.getFieldName());
+
     }
 
     @Override
-    public Mono<Profession> add(Profession profession) {
+    public CompletionStage<Profession> add(Profession profession) {
 
-        return Mono.fromCompletionStage(sessionFactory.withTransaction((session, transaction) ->
+        return sessionFactory.withTransaction((session, transaction) ->
 
                 session.createQuery("select p from Profession p where p.name = :name", Profession.class)
                         .setParameter("name", profession.getName())
@@ -50,43 +53,48 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
                             }
                             throw new ProfessionAlreadyExistsException("There is already a profession with name: %s".formatted(professionFromDB.getName()));
                         })
-        ));
+        );
     }
 
     @Override
-    public Flux<Profession> addMany(List<Profession> items) {
+    public CompletionStage<List<Profession>> addMany(List<Profession> professions) {
+        return databaseUtils.saveEntities(professions);
+    }
+
+    @Override
+    public CompletionStage<List<Profession>> findAll() {
         return null;
     }
 
     @Override
-    public Flux<Profession> findAll() {
+    public CompletionStage<Profession> findById(Long id) {
+        return sessionFactory.withSession(
+                session -> session
+                        .createQuery("select p from Profession p where p.id = :id", Profession.class)
+                        .setParameter("id", id)
+                        .getSingleResultOrNull()
+                        .thenCompose(profession -> session.fetch(Objects.nonNull(profession) ? profession.getDoctors() : null).thenApply(y -> profession)));
+    }
+
+    @Override
+    public CompletionStage<List<Profession>> findAllById(List<Long> longs) {
         return null;
     }
 
     @Override
-    public Mono<Profession> findById(Long aLong) {
+    public CompletionStage<Profession> deleteById(Long aLong) {
         return null;
     }
 
     @Override
-    public Flux<Profession> findAllById(List<Long> longs) {
+    public CompletionStage<List<Profession>> deleteAllById(List<Long> longs) {
         return null;
     }
 
     @Override
-    public Mono<Profession> deleteById(Long aLong) {
-        return null;
-    }
+    public CompletionStage<Profession> findByName(String name) {
 
-    @Override
-    public Flux<Profession> deleteAllById(List<Long> longs) {
-        return null;
-    }
-
-    @Override
-    public Mono<Profession> findByName(String name) {
-
-        return Mono.fromCompletionStage(
+        return
                 sessionFactory.withSession(session -> session.createQuery("select p from Profession p where p.name = :name", Profession.class)
                         .setParameter("name", name)
                         .getSingleResultOrNull()
@@ -97,6 +105,25 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
                             }
                             throw new NotFoundException("No profession with name: %s".formatted(name));
                         })
-                ));
+                );
+    }
+
+    @Override
+    public CompletionStage<List<Profession>> findAllByDoctorId(Long id) {
+
+        return sessionFactory.withSession(
+                session ->
+                        session.find(Doctor.class, id)
+                                .thenCompose(d -> {
+                                            if (Objects.nonNull(d)) {
+                                                return session
+                                                        .createQuery("select p from Profession p where :d member of p.doctors", Profession.class)
+                                                        .setParameter("d", d)
+                                                        .getResultList();
+                                            }
+                                            throw new NotFoundException("No doctor with id: %d".formatted(id));
+                                        }
+                                ));
+
     }
 }

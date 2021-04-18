@@ -20,7 +20,9 @@ public class AppRouting {
                 .andRoute(GET("/doctors/{id}").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getDoctorById)
                 .andRoute(GET("/doctors/{id}/professions").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getProfessionsByDoctorId)
                 .andRoute(POST("/doctors/addMultiple").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::addDoctors)
-                .andRoute(PUT("/doctors/id/{doctorId}/professions/add").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::addProfessionForDoctor);
+                .andRoute(PUT("/doctors/id/{doctorId}/professions/add").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::addProfessionForDoctor)
+                .andRoute(GET("/doctors").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getAllDoctors);
+
 
 
 

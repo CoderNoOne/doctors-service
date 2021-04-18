@@ -1,4 +1,4 @@
-package com.app.application.service;
+package com.app.application.service.profession;
 
 import com.app.application.dto.CreateProfessionDto;
 import com.app.application.dto.ProfessionDetailsDto;
@@ -20,21 +20,21 @@ public class ProfessionService {
 
     public Flux<ProfessionDetailsDto> getAllProfessionByNames(List<String> names) {
 
-        return professionRepository.findAllByNames(names)
+        return Mono.fromCompletionStage(professionRepository.findAllByNames(names)).flatMapMany(Flux::fromIterable)
                 .map(Profession::toDetails);
 
     }
 
     public Mono<ProfessionDetailsDto> findByNameWithFetchedDoctors(String name) {
 
-        return professionRepository.findByName(name)
+        return Mono.fromCompletionStage(professionRepository.findByName(name))
                 .map(Profession::toDetails);
 
     }
 
     public Mono<ProfessionDto> saveProfession(CreateProfessionDto createProfessionDto) {
 
-        return professionRepository.add(createProfessionDto.toEntity())
+        return Mono.fromCompletionStage(professionRepository.add(createProfessionDto.toEntity()))
                 .map(Profession::toDto);
 
     }

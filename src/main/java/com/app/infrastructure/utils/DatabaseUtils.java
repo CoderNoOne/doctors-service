@@ -1,5 +1,6 @@
 package com.app.infrastructure.utils;
 
+import com.app.application.dto.FieldToFetchDto;
 import com.app.application.dto.SearchByFieldValueDto;
 import com.app.application.dto.SearchByFieldValuesDto;
 import lombok.Getter;
@@ -9,8 +10,12 @@ import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import javax.persistence.criteria.*;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -50,8 +55,9 @@ public class DatabaseUtils {
 
     public <T> CompletionStage<T> saveEntity(T entity) {
 
-        return doInTx((session, tx) -> session.persist(entity)
-                .thenApply((returnVal -> entity)));
+        return
+                doInTx((session, tx) -> session.persist(entity)
+                        .thenApply((returnVal -> entity)));
     }
 
     public <T> CompletionStage<List<T>> saveEntities(List<T> items) {
@@ -75,26 +81,9 @@ public class DatabaseUtils {
                 .getSingleResultOrNull()));
     }
 
-
-    public <T, E> CompletionStage<T> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch) {
-
-        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
-                .setParameter(field.getFieldName(), field.getFieldValue())
-                .getSingleResultOrNull());
-    }
-
-//    public <T> CompletionStage<T> findOneByFieldValue(String searchQuery, Class<T> entityClass, String fieldToFetch) {
-//
-//
-//        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} :{2} ", entityClass.getSimpleName(), fieldToFetch, searchQuery), entityClass)
-//                .setParameter(searchQuery, searchQuery)
-//                .getSingleResultOrNull());
-//    }
-
-
     public <T, E, R> CompletionStage<R> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch, Function<T, R> mapper) {
 
-        return doInSession((session) -> session.createQuery(MessageFormat.format("select e from {0} e join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
+        return doInSession((session) -> session.createQuery(MessageFormat.format("select distinct e from {0} e left join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValue())
                 .getSingleResultOrNull()
                 .thenApply(mapper));
@@ -107,10 +96,10 @@ public class DatabaseUtils {
                 .map(stream -> stream
                         .filter(Objects::nonNull)
                         .distinct()
-                        .collect(Collectors.joining(" join fetch e.", "join fetch e.", "")))
+                        .collect(Collectors.joining(" left join fetch e.", " left join fetch e.", "")))
                 .orElse("");
 
-        return doInSession(session -> session.createQuery(MessageFormat.format("select e from {0} e {1} where e.{2} in (:{2})", entityClass.getSimpleName(), fetchCommands, field.getFieldName()), entityClass)
+        return doInSession(session -> session.createQuery(MessageFormat.format("select distinct e from {0} e {1} where e.{2} in (:{2})", entityClass.getSimpleName(), fetchCommands, field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValues())
                 .getResultList());
     }

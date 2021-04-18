@@ -1,13 +1,12 @@
 package com.app.infrastructure.routing.handlers;
 
 import com.app.application.dto.CreateProfessionDto;
-import com.app.application.service.ProfessionService;
+import com.app.application.service.profession.ProfessionService;
 import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
