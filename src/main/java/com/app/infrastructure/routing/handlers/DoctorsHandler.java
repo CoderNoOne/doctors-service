@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -81,5 +82,16 @@ public class DoctorsHandler {
         return RoutingHandlersUtils.toServerResponse(
                 doctorService.getAll().collectList(),
                 HttpStatus.OK);
+    }
+
+    public Mono<ServerResponse> getAllByIds(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils.toServerResponse(
+                serverRequest.bodyToMono(new ParameterizedTypeReference<List<Long>>() {})
+                        .flatMapMany(doctorService::getAllByIds)
+                        .collectList(),
+                HttpStatus.OK
+        );
+
     }
 }

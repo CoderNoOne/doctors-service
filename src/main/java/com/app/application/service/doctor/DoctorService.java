@@ -174,4 +174,11 @@ public class DoctorService {
                 .flatMapMany(Flux::fromIterable)
                 .map(Doctor::toDetails);
     }
+
+    public Flux<DoctorDetails> getAllByIds(List<Long> ids) {
+
+        return Mono.fromCompletionStage(doctorRepository.findAllById(ids))
+                .flatMapMany(Flux::fromIterable)
+                .map(Doctor::toDetails);
+    }
 }

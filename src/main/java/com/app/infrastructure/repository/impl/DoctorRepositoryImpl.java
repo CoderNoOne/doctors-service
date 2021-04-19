@@ -1,6 +1,7 @@
 package com.app.infrastructure.repository.impl;
 
 import com.app.application.dto.SearchByFieldValueDto;
+import com.app.application.dto.SearchByFieldValuesDto;
 import com.app.domain.doctor.Doctor;
 import com.app.domain.doctor.DoctorRepository;
 import com.app.infrastructure.enums.DoctorsFieldsToFetch;
@@ -55,8 +56,16 @@ public class DoctorRepositoryImpl implements DoctorRepository {
     }
 
     @Override
-    public CompletionStage<List<Doctor>> findAllById(List<Long> longs) {
-        return null;
+    public CompletionStage<List<Doctor>> findAllById(List<Long> ids) {
+
+        return databaseUtils
+                .findByFieldValues(SearchByFieldValuesDto.<Long>builder()
+                                .fieldName("id")
+                                .fieldValues(ids)
+                                .build(),
+                        Doctor.class,
+                        DoctorsFieldsToFetch.PROFESSIONS.getFieldName()
+                );
     }
 
     @Override
