@@ -59,7 +59,7 @@ public class DoctorRepositoryImpl implements DoctorRepository {
     public CompletionStage<List<Doctor>> findAllById(List<Long> ids) {
 
         return databaseUtils
-                .findByFieldValues(SearchByFieldValuesDto.<Long>builder()
+                .findAllByFieldValues(SearchByFieldValuesDto.<Long>builder()
                                 .fieldName("id")
                                 .fieldValues(ids)
                                 .build(),

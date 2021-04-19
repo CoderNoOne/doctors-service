@@ -1,8 +1,8 @@
 package com.app.infrastructure.repository.impl;
 
+import com.app.application.dto.SearchByFieldValueDto;
 import com.app.application.dto.SearchByFieldValuesDto;
 import com.app.application.exception.NotFoundException;
-import com.app.application.exception.ProfessionAlreadyExistsException;
 import com.app.domain.doctor.Doctor;
 import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
@@ -29,7 +29,7 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
 
         return
                 databaseUtils
-                        .findByFieldValues(SearchByFieldValuesDto.<String>builder()
+                        .findAllByFieldValues(SearchByFieldValuesDto.<String>builder()
                                         .fieldName(PROFESSION_NAME)
                                         .fieldValues(names)
                                         .build(),
@@ -41,19 +41,21 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
     @Override
     public CompletionStage<Profession> add(Profession profession) {
 
-        return sessionFactory.withTransaction((session, transaction) ->
+        return databaseUtils.saveEntity(profession);
 
-                session.createQuery("select p from Profession p where p.name = :name", Profession.class)
-                        .setParameter("name", profession.getName())
-                        .getSingleResultOrNull()
-                        .thenCompose(professionFromDB -> {
-                            if (Objects.isNull(professionFromDB)) {
-                                return session.persist(profession)
-                                        .thenApply(nth -> profession);
-                            }
-                            throw new ProfessionAlreadyExistsException("There is already a profession with name: %s".formatted(professionFromDB.getName()));
-                        })
-        );
+//        return sessionFactory.withTransaction((session, transaction) ->
+//
+//                session.createQuery("select p from Profession p where p.name = :name", Profession.class)
+//                        .setParameter("name", profession.getName())
+//                        .getSingleResultOrNull()
+//                        .thenCompose(professionFromDB -> {
+//                            if (Objects.isNull(professionFromDB)) {
+//                                return session.persist(profession)
+//                                        .thenApply(nth -> profession);
+//                            }
+//                            throw new ProfessionAlreadyExistsException("There is already a profession with name: %s".formatted(professionFromDB.getName()));
+//                        })
+//        );
     }
 
     @Override
@@ -63,17 +65,27 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
 
     @Override
     public CompletionStage<List<Profession>> findAll() {
-        return null;
+        return databaseUtils.findAll(Profession.class, ProfessionFieldsToFetch.DOCTORS.getFieldName());
     }
 
     @Override
     public CompletionStage<Profession> findById(Long id) {
-        return sessionFactory.withSession(
-                session -> session
-                        .createQuery("select p from Profession p where p.id = :id", Profession.class)
-                        .setParameter("id", id)
-                        .getSingleResultOrNull()
-                        .thenCompose(profession -> session.fetch(Objects.nonNull(profession) ? profession.getDoctors() : null).thenApply(y -> profession)));
+
+        return databaseUtils.findOneByFieldValue(
+                SearchByFieldValueDto.<Long>builder()
+                        .fieldValue(id)
+                        .fieldName("id")
+                        .build(),
+                Profession.class,
+                ProfessionFieldsToFetch.DOCTORS.getFieldName()
+        );
+
+//        return sessionFactory.withSession(
+//                session -> session
+//                        .createQuery("select p from Profession p where p.id = :id", Profession.class)
+//                        .setParameter("id", id)
+//                        .getSingleResultOrNull()
+//                        .thenCompose(profession -> session.fetch(Objects.nonNull(profession) ? profession.getDoctors() : null).thenApply(y -> profession)));
     }
 
     @Override
@@ -125,5 +137,14 @@ public class ProfessionRepositoryImpl implements ProfessionRepository {
                                         }
                                 ));
 
+    }
+
+    @Override
+    public CompletionStage<Boolean> doExistsByName(String name) {
+        return databaseUtils.doExistsByFieldValue(SearchByFieldValueDto.<String>builder()
+                        .fieldName("name")
+                        .fieldValue(name)
+                        .build(),
+                Profession.class);
     }
 }

@@ -25,15 +25,15 @@ public class AppRouting {
                 .andRoute(GET("/doctors").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getAllDoctors);
 
 
-
-
     }
 
     @Bean
     public RouterFunction<ServerResponse> professionsRoute(ProfessionsHandler professionsHandler) {
         return route(GET("/professions/filter/names").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::getAllProfessionByNames)
                 .andRoute(GET("/professions/name/{name}").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::getProfessionDetailsByName)
-                .andRoute(POST("/professions").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::createProfession);
+                .andRoute(GET("/professions/id/{id}").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::findById)
+                .andRoute(POST("/professions").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::createProfession)
+                .andRoute(POST("/professions/saveMultiple").and(accept(MediaType.APPLICATION_JSON)), professionsHandler::saveAll);
 
     }
 

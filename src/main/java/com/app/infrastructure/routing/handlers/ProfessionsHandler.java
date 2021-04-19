@@ -2,8 +2,10 @@ package com.app.infrastructure.routing.handlers;
 
 import com.app.application.dto.CreateProfessionDto;
 import com.app.application.service.profession.ProfessionService;
+import com.app.domain.profession.ProfessionRepository;
 import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.rsocket.RSocketProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -47,5 +49,23 @@ public class ProfessionsHandler {
                 serverRequest.bodyToMono(CreateProfessionDto.class).flatMap(professionService::saveProfession),
                 HttpStatus.CREATED);
 
+    }
+
+    public Mono<ServerResponse> findById(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils.toServerResponse(
+                professionService.findById(serverRequest.pathVariable("id")),
+                HttpStatus.OK
+        );
+    }
+
+    public Mono<ServerResponse> saveAll(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils.toServerResponse(
+                serverRequest.bodyToMono(new ParameterizedTypeReference<List<CreateProfessionDto>>() {})
+                        .flatMapMany(professionService::saveAll)
+                        .collectList(),
+                HttpStatus.CREATED
+        );
     }
 }

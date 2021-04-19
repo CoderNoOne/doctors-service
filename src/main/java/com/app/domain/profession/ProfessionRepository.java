@@ -13,4 +13,5 @@ public interface ProfessionRepository extends CrudRepository<Profession, Long> {
 
     CompletionStage<List<Profession>> findAllByDoctorId(Long id);
 
+    CompletionStage<Boolean> doExistsByName(String name);
 }

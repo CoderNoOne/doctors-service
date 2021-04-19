@@ -1,6 +1,5 @@
 package com.app.infrastructure.utils;
 
-import com.app.application.dto.FieldToFetchDto;
 import com.app.application.dto.SearchByFieldValueDto;
 import com.app.application.dto.SearchByFieldValuesDto;
 import lombok.Getter;
@@ -10,7 +9,6 @@ import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import javax.persistence.criteria.*;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -66,7 +64,7 @@ public class DatabaseUtils {
         );
     }
 
-    public <T, E> CompletionStage<List<T>> findByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass) {
+    public <T, E> CompletionStage<List<T>> findAllByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass) {
 
         return doInStatelessSession(session -> session.createQuery(MessageFormat.format("select e from {0} e where e.{1}= :{1}", entityClass.getSimpleName(), field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValue())
@@ -89,7 +87,15 @@ public class DatabaseUtils {
                 .thenApply(mapper));
     }
 
-    public <T, E> CompletionStage<List<T>> findByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass, String... fieldsToFetch) {
+    public <T, E> CompletionStage<T> findOneByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String fieldToFetch) {
+
+        return doInSession((session) -> session.createQuery(MessageFormat.format("select distinct e from {0} e left join fetch e.{1} where e.{2}= :{2} ", entityClass.getSimpleName(), fieldToFetch, field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
+                .getSingleResultOrNull());
+
+    }
+
+    public <T, E> CompletionStage<List<T>> findAllByFieldValues(SearchByFieldValuesDto<E> field, Class<T> entityClass, String... fieldsToFetch) {
 
         final var fetchCommands = Optional.ofNullable(fieldsToFetch)
                 .map(Arrays::stream)
@@ -102,6 +108,43 @@ public class DatabaseUtils {
         return doInSession(session -> session.createQuery(MessageFormat.format("select distinct e from {0} e {1} where e.{2} in (:{2})", entityClass.getSimpleName(), fetchCommands, field.getFieldName()), entityClass)
                 .setParameter(field.getFieldName(), field.getFieldValues())
                 .getResultList());
+    }
+
+    public <T, E> CompletionStage<List<T>> findAllByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass, String... fieldsToFetch) {
+
+        final var fetchCommands = Optional.ofNullable(fieldsToFetch)
+                .map(Arrays::stream)
+                .map(stream -> stream
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.joining(" left join fetch e.", " left join fetch e.", "")))
+                .orElse("");
+
+        return doInSession(session -> session.createQuery(MessageFormat.format("select distinct e from {0} e {1} where e.{2} = :{2}", entityClass.getSimpleName(), fetchCommands, field.getFieldName()), entityClass)
+                .setParameter(field.getFieldName(), field.getFieldValue())
+                .getResultList());
+    }
+
+    public <T> CompletionStage<List<T>> findAll(Class<T> entityClass, String... fieldsToFetch) {
+
+        final var fetchCommands = Optional.ofNullable(fieldsToFetch)
+                .map(Arrays::stream)
+                .map(stream -> stream
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.joining(" left join fetch e.", " left join fetch e.", "")))
+                .orElse("");
+
+        return doInSession(session -> session.createQuery(MessageFormat.format("select distinct e from {0} e {1}", entityClass.getSimpleName(), fetchCommands), entityClass)
+
+                .getResultList());
+    }
+
+    public <T, E> CompletionStage<Boolean> doExistsByFieldValue(SearchByFieldValueDto<E> field, Class<T> entityClass) {
+
+        return doInSession(session -> session.createQuery(MessageFormat.format("select case when (count(*) > 0) then true else false end from {0} where e.{1} = :{1}", entityClass.getSimpleName(), field.getFieldName()), Boolean.class)
+                .setParameter(field.getFieldName(), field.getFieldValue())
+                .getSingleResult());
     }
 
 }
