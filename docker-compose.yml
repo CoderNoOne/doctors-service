@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: '3.9'
 
 services:
@@ -61,3 +62,27 @@ services:
 
 networks:
   net:
+=======
+version: '3.8'
+
+services:
+
+  mysql1:
+    image: mysql:latest
+    volumes:
+      - mysql1:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_1
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user1234
+      MYSQL_TCP_PORT: 3307
+    ports:
+      - 3307:3307
+    expose:
+      - 3307
+
+
+volumes:
+  mysql1:
+>>>>>>> e7dbfd1dff615101d5240f04471ef4f1211a3651
