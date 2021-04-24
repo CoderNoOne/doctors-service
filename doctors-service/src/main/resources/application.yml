@@ -1,0 +1,12 @@
+server:
+  port: 8100
+
+spring:
+  application:
+    name: doctors-service
+
+eureka:
+  client:
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER:http://eureka-server:8761/eureka}

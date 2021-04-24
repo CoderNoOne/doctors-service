@@ -1,0 +1,23 @@
+package com.app;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class DoctorsServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DoctorsServiceApplication.class, args);
+
+    }
+
+    @Bean
+    public DefaultDataBufferFactory dataBufferFactory() {
+        return new DefaultDataBufferFactory();
+    }
+}
+

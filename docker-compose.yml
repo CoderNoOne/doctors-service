@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+
+  mysql-db:
+    container_name: mysql-db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: reactive_db
+    ports:
+      - "3306:3306"
+    restart: always
+    networks:
+      - net
+
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "mysql-db" ]
+      timeout: 20s
+      retries: 10
+
+  eureka-server:
+    container_name: eureka-server
+    image: eureka-server
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - net
+    restart: always
+
+  doctors-service:
+    container_name: doctors-service
+    image: doctors-service
+    build:
+      context: ./doctors-service
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    restart: always
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - net
+
+  api-gateway:
+    container_name: api-gateway
+    image: api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - net
+
+
+networks:
+  net:

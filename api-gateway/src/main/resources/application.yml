@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: doctors-service
+          uri: http://doctors-service:8100
+          predicates:
+            - Path=/doctors/**
+
+eureka:
+  client:
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER:http://eureka-server:8761/eureka}
+
+tokens:
+  access-token:
+    expiration-time-ms: 300000
+  refresh-token:
+    expiration-time-ms: 30000000
+    property: access-token-expiration-date-ms
+  prefix: Bearer
