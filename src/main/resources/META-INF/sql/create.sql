@@ -1,3 +1,0 @@
-CREATE TABLE IF NOT EXISTS doctors (id bigint NOT NULL AUTO_INCREMENT,firstName varchar(255) DEFAULT NULL,lastName  varchar(255) DEFAULT NULL,PRIMARY KEY (id));
-CREATE TABLE IF NOT EXISTS professions ( id bigint NOT NULL AUTO_INCREMENT,name varchar(255) DEFAULT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE TABLE IF NOT EXISTS doctors_professions(doctor_id bigint NOT NULL,profession_id bigint NOT NULL,PRIMARY KEY (doctor_id, profession_id),KEY profession_fk (profession_id),CONSTRAINT profession_fk FOREIGN KEY (profession_id) REFERENCES professions (id),CONSTRAINT doctor_fk FOREIGN KEY (doctor_id) REFERENCES doctors (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
