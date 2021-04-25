@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
 @Data
 public class CreateDoctorDto {
 
+    private String username;
+    private String password;
+    private String passwordConfirmation;
+
     private String firstName;
     private String lastName;
 
@@ -24,6 +28,8 @@ public class CreateDoctorDto {
 
     public Doctor toEntity() {
         return Doctor.builder()
+                .username(username)
+                .password(password.toCharArray())
                 .firstName(firstName)
                 .lastName(lastName)
                 .professions(Objects.nonNull(professions) ? professions.stream().map(ProfessionDto::toEntity).collect(Collectors.toList())  : new ArrayList<>())

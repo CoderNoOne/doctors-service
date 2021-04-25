@@ -56,6 +56,16 @@ public class DoctorsHandler {
                 );
     }
 
+    public Mono<ServerResponse> getDoctorByUsername(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils
+                .toServerResponse(
+                        doctorService.getByUsername(serverRequest.pathVariable("username")),
+                        HttpStatus.OK
+                );
+
+    }
+
     public Mono<ServerResponse> addDoctors(ServerRequest serverRequest) {
 
         return serverRequest.bodyToMono(new ParameterizedTypeReference<List<CreateDoctorDto>>() {
@@ -87,7 +97,8 @@ public class DoctorsHandler {
     public Mono<ServerResponse> getAllByIds(ServerRequest serverRequest) {
 
         return RoutingHandlersUtils.toServerResponse(
-                serverRequest.bodyToMono(new ParameterizedTypeReference<List<Long>>() {})
+                serverRequest.bodyToMono(new ParameterizedTypeReference<List<Long>>() {
+                })
                         .flatMapMany(doctorService::getAllByIds)
                         .collectList(),
                 HttpStatus.OK

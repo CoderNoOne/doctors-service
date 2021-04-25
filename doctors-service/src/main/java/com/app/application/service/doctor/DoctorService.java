@@ -13,14 +13,12 @@ import com.app.domain.profession.Profession;
 import com.app.domain.profession.ProfessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,6 +30,7 @@ public class DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final ProfessionRepository professionRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public Mono<DoctorDetails> saveDoctor(final CreateDoctorDto createDoctorDto) {
 
@@ -48,6 +47,7 @@ public class DoctorService {
                             .thenApply(saved -> {
                                 professions.addAll(saved);
                                 doctorToSave.setProfessions(professions.stream().distinct().collect(Collectors.toList()));
+                                doctorToSave.setPassword(passwordEncoder.encode(Arrays.toString(doctorToSave.getPassword())).toCharArray());
                                 return doctorToSave;
                             })
                             .thenCompose(doctorRepository::add);
@@ -172,6 +172,12 @@ public class DoctorService {
 
         return Mono.fromCompletionStage(doctorRepository.findAll())
                 .flatMapMany(Flux::fromIterable)
+                .map(Doctor::toDetails);
+    }
+
+    public Mono<DoctorDetails> getByUsername(String username) {
+
+        return Mono.fromCompletionStage(() -> doctorRepository.findByUsername(username))
                 .map(Doctor::toDetails);
     }
 

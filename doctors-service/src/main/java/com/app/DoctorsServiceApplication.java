@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @EnableEurekaClient
@@ -18,6 +20,11 @@ public class DoctorsServiceApplication {
     @Bean
     public DefaultDataBufferFactory dataBufferFactory() {
         return new DefaultDataBufferFactory();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }
 

@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 
 import javax.crypto.SecretKey;
 
@@ -20,4 +21,8 @@ public class ApiGatewayApplication {
         return Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 
+    @Bean
+    public DefaultDataBufferFactory dataBufferFactory() {
+        return new DefaultDataBufferFactory();
+    }
 }

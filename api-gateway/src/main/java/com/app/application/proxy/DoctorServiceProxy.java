@@ -1,5 +1,6 @@
 package com.app.application.proxy;
 
+
 import com.app.application.dto.GetDoctorDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,6 +15,14 @@ public class DoctorServiceProxy {
         this.webClient = webClientBuilder
                 .baseUrl("http://doctors-service/doctors")
                 .build();
+    }
+
+    public Mono<GetDoctorDto> getDoctorByUsername(final String username) {
+        return webClient
+                .get()
+                .uri("/username/{username}", username)
+                .retrieve()
+                .bodyToMono(GetDoctorDto.class);
     }
 
     public Mono<GetDoctorDto> getDoctorById(final Long id) {

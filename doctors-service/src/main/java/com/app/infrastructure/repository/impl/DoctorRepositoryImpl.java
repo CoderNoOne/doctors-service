@@ -66,6 +66,19 @@ public class DoctorRepositoryImpl implements DoctorRepository {
     }
 
     @Override
+    public CompletionStage<Doctor> findByUsername(String username) {
+        return databaseUtils
+                .findOneByFieldValue(SearchByFieldValueDto.<String>builder()
+                                .fieldName("username")
+                                .fieldValue(username)
+                                .build(),
+                        Doctor.class,
+                        DoctorsFieldsToFetch.PROFESSIONS.getFieldName(),
+                        Function.identity()
+                );
+    }
+
+    @Override
     public CompletionStage<Doctor> deleteById(Long aLong) {
         return null;
     }

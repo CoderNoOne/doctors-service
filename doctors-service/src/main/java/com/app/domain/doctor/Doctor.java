@@ -27,6 +27,11 @@ public class Doctor {
     private String firstName;
     private String lastName;
 
+    private String username;
+
+    @Setter
+    private char[] password;
+
     @Setter
     @ManyToMany
     @JoinTable(
