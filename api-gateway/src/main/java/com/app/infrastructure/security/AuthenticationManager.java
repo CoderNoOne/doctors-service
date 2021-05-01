@@ -25,6 +25,8 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
 
+        log.info("Authentication credentials: " + authentication.getCredentials());
+
         try {
             if (!appTokensService.isTokenValid(authentication.getCredentials().toString())) {
                 return Mono.error(() -> new AuthenticationException("AUTH FAILED - TOKEN IS NOT VALID"));

@@ -1,5 +1,6 @@
 package com.app.infrastructure.security.tokens;
 
+import com.app.application.dto.type.Role;
 import com.app.application.proxy.DoctorServiceProxy;
 import com.app.infrastructure.security.dto.TokensDto;
 import io.jsonwebtoken.Claims;
@@ -50,6 +51,7 @@ public class AppTokensService {
                     var accessToken = Jwts
                             .builder()
                             .setSubject(String.valueOf(id))
+                            .claim("role", Role.ROLE_DOCTOR.toString())
                             .setExpiration(accessTokenExpirationTime)
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)
@@ -80,6 +82,10 @@ public class AppTokensService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public String getRole(String token) {
+        return claims(token).get("role", String.class);
     }
 
     public String getId(String token) {

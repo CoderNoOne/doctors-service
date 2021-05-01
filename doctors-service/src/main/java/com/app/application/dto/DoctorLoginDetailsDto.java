@@ -1,16 +1,17 @@
-package com.app.infrastructure.security.dto;
+package com.app.application.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class AuthenticationDto {
+@Data
+public class DoctorLoginDetailsDto {
+
+    private Long id;
     private String username;
     private String password;
-    private String role;
 }

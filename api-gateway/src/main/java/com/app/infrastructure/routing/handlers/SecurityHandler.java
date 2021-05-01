@@ -1,5 +1,6 @@
 package com.app.infrastructure.routing.handlers;
 
+import com.app.application.dto.type.Role;
 import com.app.application.exception.AuthenticationException;
 import com.app.infrastructure.security.service.DoctorLoginService;
 import com.app.infrastructure.security.dto.AuthenticationDto;
@@ -14,6 +15,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
+
 import static java.util.Objects.isNull;
 
 @Component
@@ -24,13 +27,16 @@ public class SecurityHandler {
     private final PasswordEncoder passwordEncoder;
     private final AppTokensService appTokensService;
 
-    public Mono<ServerResponse> loginAsDoctor(ServerRequest serverRequest) {
+    public Mono<ServerResponse> login(ServerRequest serverRequest) {
 
         return serverRequest.bodyToMono(AuthenticationDto.class)
                 .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide request body")))
                 .map(dto -> {
                     if (isNull(dto.getPassword()) || isNull(dto.getUsername())) {
                         throw new AuthenticationException("Provide password and username");
+                    }
+                    if (isNull(dto.getRole()) || Arrays.stream(Role.values()).noneMatch(enumVal -> enumVal.toString().equalsIgnoreCase(dto.getRole()))) {
+                        throw new AuthenticationException("Role not valid. Must be one of: %s".formatted(Arrays.toString(Role.values())));
                     }
                     return dto;
                 })
