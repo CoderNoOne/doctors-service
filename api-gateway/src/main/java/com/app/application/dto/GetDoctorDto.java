@@ -1,11 +1,11 @@
 package com.app.application.dto;
 
+import com.app.application.dto.type.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.management.relation.Role;
 
 @NoArgsConstructor
 @AllArgsConstructor

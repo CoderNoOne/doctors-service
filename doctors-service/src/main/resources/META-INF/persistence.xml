@@ -10,7 +10,7 @@
 
             <!-- MySQL -->
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:mysql://mysql-db:3306/reactive_db"/>
+                      value="jdbc:mysql://localhost:3306/reactive_db?createDatabaseIfNotExist=true"/>
 
             <!-- Credentials -->
             <property name="javax.persistence.jdbc.user"
@@ -26,10 +26,10 @@
             <property name="javax.persistence.schema-generation.database.action"
                       value="create"/>
 
-            <property name="javax.persistence.schema-generation.create-source" value="script"/>
+<!--            <property name="javax.persistence.schema-generation.create-source" value="script"/>-->
 
-            <property name="javax.persistence.schema-generation.create-script-source"
-                      value="META-INF/sql/create.sql" />
+<!--            <property name="javax.persistence.schema-generation.create-script-source"-->
+<!--                      value="META-INF/sql/create.sql" />-->
 
             <!-- SQL statement logging -->
             <property name="hibernate.format_sql" value="true"/>

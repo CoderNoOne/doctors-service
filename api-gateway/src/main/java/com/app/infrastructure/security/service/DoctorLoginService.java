@@ -1,5 +1,6 @@
 package com.app.infrastructure.security.service;
 
+import com.app.application.dto.type.Role;
 import com.app.application.proxy.DoctorServiceProxy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,14 +16,17 @@ public class DoctorLoginService {
 
     protected final DoctorServiceProxy proxy;
 
-    public Mono<User> findByUsername(String username) {
-        return proxy
+    public Mono<User> findByUsername(String username, Role role) {
+
+        var isDoctor = role.equals(Role.ROLE_DOCTOR);
+
+        return  proxy
                 .getDoctorByUsername(username)
                 .map(getDoctorDto -> new User(
                         getDoctorDto.getUsername(),
                         getDoctorDto.getPassword(),
                         true, true, true, true,
-                        List.of(new SimpleGrantedAuthority(getDoctorDto.getRole().toString()))
-                ));
+                        List.of(new SimpleGrantedAuthority("doctor")
+                        )));
     }
 }

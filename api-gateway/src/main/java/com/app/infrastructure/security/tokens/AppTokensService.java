@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +52,7 @@ public class AppTokensService {
                     var accessToken = Jwts
                             .builder()
                             .setSubject(String.valueOf(id))
-                            .claim("role", Role.ROLE_DOCTOR.toString())
+                            .addClaims(Map.of("role", "Doctor"))
                             .setExpiration(accessTokenExpirationTime)
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)

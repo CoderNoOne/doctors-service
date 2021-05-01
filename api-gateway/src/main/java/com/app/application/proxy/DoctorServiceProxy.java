@@ -2,18 +2,25 @@ package com.app.application.proxy;
 
 
 import com.app.application.dto.GetDoctorDto;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 @Service
 public class DoctorServiceProxy {
 
     private final WebClient webClient;
 
+    @Value("${spring.profiles.active}")
+    private String profile;
+
     public DoctorServiceProxy(final WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
-                .baseUrl("http://doctors-service/doctors")
+                .baseUrl("http://%s/doctors".formatted("local".equalsIgnoreCase(profile) ? "localhost": "doctors-service"))
                 .build();
     }
 

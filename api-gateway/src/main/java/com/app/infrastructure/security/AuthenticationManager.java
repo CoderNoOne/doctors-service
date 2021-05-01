@@ -26,6 +26,8 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
     public Mono<Authentication> authenticate(Authentication authentication) {
 
         log.info("Authentication credentials: " + authentication.getCredentials());
+        log.info("Authentication role: " + appTokensService.getRole(authentication.getCredentials().toString()));
+
 
         try {
             if (!appTokensService.isTokenValid(authentication.getCredentials().toString())) {
