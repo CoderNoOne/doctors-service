@@ -2,6 +2,7 @@ package com.app.application.proxy;
 
 import com.app.application.dto.GetUserDto;
 import com.app.infrastructure.security.dto.TokensDto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,6 +16,7 @@ public class PatientServiceProxy {
     @Value("${spring.profiles.active}")
     private String profile;
 
+    @Autowired
     public PatientServiceProxy(final WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
                 .baseUrl("http://%s:9000/patients".formatted("local".equalsIgnoreCase(profile) ? "localhost" : "patients-service")).build();
@@ -31,7 +33,7 @@ public class PatientServiceProxy {
     public Mono<GetUserDto> getPatientById(long userId) {
         return webClient
                 .get()
-                .uri("id/" + userId)
+                .uri("/id/" + userId)
                 .retrieve()
                 .bodyToMono(GetUserDto.class);
     }

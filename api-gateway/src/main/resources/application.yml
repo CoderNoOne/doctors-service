@@ -13,6 +13,11 @@ spring:
           predicates:
             - Path=/doctors/**
 
+        - id: patients-service
+          uri: http://patients-service:9000
+          predicates:
+            - Path=/patients/**
+
 eureka:
   client:
     registerWithEureka: true
