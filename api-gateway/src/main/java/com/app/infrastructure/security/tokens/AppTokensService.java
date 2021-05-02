@@ -2,6 +2,7 @@ package com.app.infrastructure.security.tokens;
 
 import com.app.application.dto.type.Role;
 import com.app.application.proxy.DoctorServiceProxy;
+import com.app.application.proxy.PatientServiceProxy;
 import com.app.infrastructure.security.dto.TokensDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -13,7 +14,6 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,15 +33,22 @@ public class AppTokensService {
 
     private final SecretKey secretKey;
     private final DoctorServiceProxy doctorServiceProxy;
+    private final PatientServiceProxy patientServiceProxy;
 
-    public Mono<TokensDto> generateTokens(User user) {
+    public Mono<TokensDto> generateTokens(User user, String role) {
 
         if (user == null) {
             throw new SecurityException("generate tokens - authentication object is null");
         }
 
-        return doctorServiceProxy
-                .getDoctorByUsername(user.getUsername())
+        if (role == null) {
+            throw new SecurityException("generate tokens - role is null");
+        }
+
+        return (switch (Role.valueOf(role)) {
+            case ROLE_DOCTOR -> doctorServiceProxy.getDoctorByUsername(user.getUsername());
+            case ROLE_PATIENT -> patientServiceProxy.getPatientByUsername(user.getUsername());
+        })
                 .flatMap(userFromDb -> {
                     var id = userFromDb.getId();
                     var createdDate = new Date();
@@ -52,7 +59,7 @@ public class AppTokensService {
                     var accessToken = Jwts
                             .builder()
                             .setSubject(String.valueOf(id))
-                            .claim("roles", "doctor")
+                            .claim("role", role)
                             .setExpiration(accessTokenExpirationTime)
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)
@@ -63,6 +70,7 @@ public class AppTokensService {
                             .builder()
                             .setSubject(String.valueOf(id))
                             .setExpiration(refreshTokenExpirationTime)
+                            .claim("role", role)
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)
                             .claim(refreshTokenAccessTokenKey, accessTokenExpirationTimeMillis)

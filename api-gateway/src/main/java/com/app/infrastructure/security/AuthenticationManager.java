@@ -1,5 +1,6 @@
 package com.app.infrastructure.security;
 
+import com.app.application.dto.type.Role;
 import com.app.application.exception.AuthenticationException;
 import com.app.application.proxy.DoctorServiceProxy;
 import com.app.infrastructure.security.tokens.AppTokensService;
@@ -12,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,26 +28,29 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
 
-
-        System.out.println();
-//        log.info("Authentication credentials: " + authentication.getCredentials());
-        var role = appTokensService.getRole(authentication.getCredentials().toString());
-        log.info("Authentication role: " + role);
-
-
         try {
             if (!appTokensService.isTokenValid(authentication.getCredentials().toString())) {
                 return Mono.error(() -> new AuthenticationException("AUTH FAILED - TOKEN IS NOT VALID"));
             }
-            return proxy
-                    .getDoctorById(Long.parseLong(appTokensService.getId(authentication.getCredentials().toString())))
-                    .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
-                    .map(userFromDb -> new UsernamePasswordAuthenticationToken(
-                            userFromDb.getUsername(),
-                            null,
-                            Collections.emptyList()
-                           /* List.of(new SimpleGrantedAuthority(userFromDb.getRole().toString())*/)
-                    );
+
+            var role = appTokensService.getRole(authentication.getCredentials().toString());
+
+            if (Arrays.stream(Role.values()).noneMatch(enumVal -> enumVal.name().equals(role))) {
+                return Mono.error(() -> new AuthenticationException("AUTH FAILED - NOT VALID ROLE"));
+            }
+
+            return (switch (Role.valueOf(role)) {
+                case ROLE_DOCTOR -> proxy
+                        .getDoctorById(Long.parseLong(appTokensService.getId(authentication.getCredentials().toString())))
+                        .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
+                        .map(userFromDb -> new UsernamePasswordAuthenticationToken(
+                                userFromDb.getUsername(),
+                                null,
+                                List.of(new SimpleGrantedAuthority(role)
+                                )));
+                case ROLE_PATIENT -> Mono.empty();
+            });
+
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return Mono.error(() -> new AuthenticationException("User cannot be authenticated"));

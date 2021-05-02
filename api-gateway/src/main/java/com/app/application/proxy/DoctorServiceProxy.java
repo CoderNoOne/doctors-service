@@ -1,14 +1,12 @@
 package com.app.application.proxy;
 
 
-import com.app.application.dto.GetDoctorDto;
+import com.app.application.dto.GetUserDto;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.util.Objects;
 
 @Service
 public class DoctorServiceProxy {
@@ -24,19 +22,19 @@ public class DoctorServiceProxy {
                 .build();
     }
 
-    public Mono<GetDoctorDto> getDoctorByUsername(final String username) {
+    public Mono<GetUserDto> getDoctorByUsername(final String username) {
         return webClient
                 .get()
                 .uri("/username/" + username)
                 .retrieve()
-                .bodyToMono(GetDoctorDto.class);
+                .bodyToMono(GetUserDto.class);
     }
 
-    public Mono<GetDoctorDto> getDoctorById(final Long id) {
+    public Mono<GetUserDto> getDoctorById(final Long id) {
         return webClient
                 .get()
                 .uri("/{id}", id)
                 .retrieve()
-                .bodyToMono(GetDoctorDto.class);
+                .bodyToMono(GetUserDto.class);
     }
 }

@@ -9,6 +9,7 @@ import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -17,6 +18,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
@@ -30,7 +32,9 @@ public class SecurityHandler {
 
     public Mono<ServerResponse> login(ServerRequest serverRequest) {
 
-        return serverRequest.bodyToMono(AuthenticationDto.class)
+        var authenticationDtoMono = serverRequest.bodyToMono(AuthenticationDto.class);
+
+        return authenticationDtoMono
                 .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide request body")))
                 .map(dto -> {
                     if (isNull(dto.getPassword()) || isNull(dto.getUsername())) {
@@ -42,10 +46,10 @@ public class SecurityHandler {
                     return dto;
                 })
                 .flatMap(authenticationDto -> doctorLoginService
-                                .findByUsername(authenticationDto.getUsername(), Role.valueOf(authenticationDto.getRole()))
-                        /*.filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword()))*/)
+                        .findByUsername(authenticationDto.getUsername(), Role.valueOf(authenticationDto.getRole()))
+                        .filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword())))
                 .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide valid credentials")))
-                .flatMap(appTokensService::generateTokens)
+                .flatMap(user -> appTokensService.generateTokens(user, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).findAny().orElse(null)))
                 .flatMap(s -> ServerResponse.ok().body(BodyInserters.fromValue(s)));
 
     }

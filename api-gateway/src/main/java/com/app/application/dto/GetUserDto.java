@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Data
-public class GetDoctorDto {
+public class GetUserDto {
 
     private Long id;
     private String username;
