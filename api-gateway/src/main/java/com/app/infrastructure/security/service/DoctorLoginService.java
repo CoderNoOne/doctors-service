@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -20,13 +21,13 @@ public class DoctorLoginService {
 
         var isDoctor = role.equals(Role.ROLE_DOCTOR);
 
-        return  proxy
+        return isDoctor ? proxy
                 .getDoctorByUsername(username)
                 .map(getDoctorDto -> new User(
                         getDoctorDto.getUsername(),
                         getDoctorDto.getPassword(),
                         true, true, true, true,
-                        List.of(new SimpleGrantedAuthority("doctor")
-                        )));
+                        List.of(new SimpleGrantedAuthority("ROLE_DOCTOR"))
+                )) : Mono.empty();
     }
 }

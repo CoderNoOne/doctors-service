@@ -2,6 +2,7 @@ package com.app.domain.doctor;
 
 import com.app.application.dto.DoctorDetails;
 import com.app.application.dto.DoctorDto;
+import com.app.application.dto.DoctorLoginDetails;
 import com.app.domain.profession.Profession;
 import lombok.*;
 
@@ -30,7 +31,7 @@ public class Doctor {
     private String username;
 
     @Setter
-    private char[] password;
+    private String password;
 
     @Setter
     @ManyToMany
@@ -56,6 +57,17 @@ public class Doctor {
                 .firstName(firstName)
                 .lastName(lastName)
                 .build();
+    }
+
+    public DoctorLoginDetails toLoginDetails(){
+
+        return DoctorLoginDetails
+                .builder()
+                .id(id)
+                .username(username)
+                .password(password)
+                .build();
+
     }
 
 }

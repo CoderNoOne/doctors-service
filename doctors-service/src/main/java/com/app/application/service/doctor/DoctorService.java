@@ -1,9 +1,6 @@
 package com.app.application.service.doctor;
 
-import com.app.application.dto.CreateDoctorDto;
-import com.app.application.dto.CreateProfessionDto;
-import com.app.application.dto.DoctorDetails;
-import com.app.application.dto.ProfessionDto;
+import com.app.application.dto.*;
 import com.app.application.exception.NotFoundException;
 import com.app.application.exception.NotValidIdException;
 import com.app.application.exception.ProfessionAlreadyHasTheProfessionException;
@@ -47,7 +44,7 @@ public class DoctorService {
                             .thenApply(saved -> {
                                 professions.addAll(saved);
                                 doctorToSave.setProfessions(professions.stream().distinct().collect(Collectors.toList()));
-                                doctorToSave.setPassword(passwordEncoder.encode(Arrays.toString(doctorToSave.getPassword())).toCharArray());
+                                doctorToSave.setPassword(passwordEncoder.encode(doctorToSave.getPassword()));
                                 return doctorToSave;
                             })
                             .thenCompose(doctorRepository::add);
@@ -175,10 +172,10 @@ public class DoctorService {
                 .map(Doctor::toDetails);
     }
 
-    public Mono<DoctorDetails> getByUsername(String username) {
+    public Mono<DoctorLoginDetails> getByUsername(String username) {
 
         return Mono.fromCompletionStage(() -> doctorRepository.findByUsername(username))
-                .map(Doctor::toDetails);
+                .map(Doctor::toLoginDetails);
     }
 
     public Flux<DoctorDetails> getAllByIds(List<Long> ids) {

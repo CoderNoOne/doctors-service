@@ -7,8 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
-import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -16,6 +15,7 @@ public class AppRouting {
 
     @Bean
     public RouterFunction<ServerResponse> doctorsRoute(SecurityHandler securityHandler) {
-        return route(POST("security/login").and(accept(MediaType.APPLICATION_JSON)), securityHandler::login);
+        return route(POST("security/login").and(accept(MediaType.APPLICATION_JSON)), securityHandler::login).
+                andRoute(GET("getUser/username/{username}").and(accept(MediaType.APPLICATION_JSON)), securityHandler::getUser);
     }
 }

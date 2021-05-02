@@ -20,14 +20,14 @@ public class DoctorServiceProxy {
 
     public DoctorServiceProxy(final WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
-                .baseUrl("http://%s/doctors".formatted("local".equalsIgnoreCase(profile) ? "localhost": "doctors-service"))
+                .baseUrl("http://%s:8100/doctors".formatted("local".equalsIgnoreCase(profile) ? "localhost": "doctors-service"))
                 .build();
     }
 
     public Mono<GetDoctorDto> getDoctorByUsername(final String username) {
         return webClient
                 .get()
-                .uri("/username/{username}", username)
+                .uri("/username/" + username)
                 .retrieve()
                 .bodyToMono(GetDoctorDto.class);
     }

@@ -30,23 +30,30 @@ public class SecurityHandler {
 
     public Mono<ServerResponse> login(ServerRequest serverRequest) {
 
-        return RoutingHandlersUtils.toServerResponse(serverRequest.bodyToMono(AuthenticationDto.class)
-                        .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide request body")))
-                        .map(dto -> {
-                            if (isNull(dto.getPassword()) || isNull(dto.getUsername())) {
-                                throw new AuthenticationException("Provide password and username");
-                            }
-                            if (isNull(dto.getRole()) || Arrays.stream(Role.values()).noneMatch(enumVal -> enumVal.toString().equalsIgnoreCase(dto.getRole()))) {
-                                throw new AuthenticationException("Role not valid. Must be one of: %s".formatted(Arrays.toString(Role.values())));
-                            }
-                            return dto;
-                        })
-                        .flatMap(authenticationDto -> doctorLoginService
+        return serverRequest.bodyToMono(AuthenticationDto.class)
+                .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide request body")))
+                .map(dto -> {
+                    if (isNull(dto.getPassword()) || isNull(dto.getUsername())) {
+                        throw new AuthenticationException("Provide password and username");
+                    }
+                    if (isNull(dto.getRole()) || Arrays.stream(Role.values()).noneMatch(enumVal -> enumVal.toString().equalsIgnoreCase(dto.getRole()))) {
+                        throw new AuthenticationException("Role not valid. Must be one of: %s".formatted(Arrays.toString(Role.values())));
+                    }
+                    return dto;
+                })
+                .flatMap(authenticationDto -> doctorLoginService
                                 .findByUsername(authenticationDto.getUsername(), Role.valueOf(authenticationDto.getRole()))
-                                .filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword())))
-                        .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide valid credentials")))
-                        .flatMap(appTokensService::generateTokens),
-                HttpStatus.CREATED);
+                        /*.filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword()))*/)
+                .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide valid credentials")))
+                .flatMap(appTokensService::generateTokens)
+                .flatMap(s -> ServerResponse.ok().body(BodyInserters.fromValue(s)));
+
+    }
+
+    public Mono<ServerResponse> getUser(ServerRequest serverRequest) {
+
+        return doctorLoginService.findByUsername(serverRequest.pathVariable("username"), Role.ROLE_DOCTOR)
+                .flatMap(user -> ServerResponse.ok().body(BodyInserters.fromValue(user)));
     }
 }
 

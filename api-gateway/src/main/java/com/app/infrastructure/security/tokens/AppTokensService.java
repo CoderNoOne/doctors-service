@@ -52,7 +52,7 @@ public class AppTokensService {
                     var accessToken = Jwts
                             .builder()
                             .setSubject(String.valueOf(id))
-                            .addClaims(Map.of("role", "Doctor"))
+                            .claim("roles", "doctor")
                             .setExpiration(accessTokenExpirationTime)
                             .setIssuedAt(createdDate)
                             .signWith(secretKey)
@@ -86,6 +86,7 @@ public class AppTokensService {
     }
 
     public String getRole(String token) {
+        token = token.substring(7);
         return claims(token).get("role", String.class);
     }
 

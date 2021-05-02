@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -25,8 +26,11 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
 
-        log.info("Authentication credentials: " + authentication.getCredentials());
-        log.info("Authentication role: " + appTokensService.getRole(authentication.getCredentials().toString()));
+
+        System.out.println();
+//        log.info("Authentication credentials: " + authentication.getCredentials());
+        var role = appTokensService.getRole(authentication.getCredentials().toString());
+        log.info("Authentication role: " + role);
 
 
         try {
@@ -39,8 +43,9 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
                     .map(userFromDb -> new UsernamePasswordAuthenticationToken(
                             userFromDb.getUsername(),
                             null,
-                            List.of(new SimpleGrantedAuthority(userFromDb.getRole().toString()))
-                    ));
+                            Collections.emptyList()
+                           /* List.of(new SimpleGrantedAuthority(userFromDb.getRole().toString())*/)
+                    );
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return Mono.error(() -> new AuthenticationException("User cannot be authenticated"));

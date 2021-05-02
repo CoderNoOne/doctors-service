@@ -29,7 +29,7 @@ public class CreateDoctorDto {
     public Doctor toEntity() {
         return Doctor.builder()
                 .username(username)
-                .password(password.toCharArray())
+                .password(password)
                 .firstName(firstName)
                 .lastName(lastName)
                 .professions(Objects.nonNull(professions) ? professions.stream().map(ProfessionDto::toEntity).collect(Collectors.toList())  : new ArrayList<>())
