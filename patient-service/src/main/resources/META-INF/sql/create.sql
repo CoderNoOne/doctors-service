@@ -1,0 +1,2 @@
+create table if not exists reactive_db.patients (id bigserial not null constraint patients_pk primary key, first_name text, last_name  text, username text,age integer);
+alter table reactive_db.patients owner to postgres;

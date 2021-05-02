@@ -20,7 +20,6 @@ import java.util.function.Function;
 public class DoctorRepositoryImpl implements DoctorRepository {
 
     private final DatabaseUtils databaseUtils;
-    private final Stage.SessionFactory sessionFactory;
 
     @Override
     public CompletionStage<Doctor> add(Doctor doctor) {
