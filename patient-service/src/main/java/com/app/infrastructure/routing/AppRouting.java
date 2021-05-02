@@ -20,8 +20,8 @@ public class AppRouting {
 
     @Bean
     public RouterFunction<ServerResponse> patientsRoute(PatientsHandler patientsHandler) {
-        return route(POST("patients/register").and(accept(MediaType.APPLICATION_JSON)), patientsHandler::addPatient);
-
+        return route(POST("patients/register").and(accept(MediaType.APPLICATION_JSON)), patientsHandler::addPatient)
+                .andRoute(GET("patients/username/{username}").and(accept(MediaType.APPLICATION_JSON)), patientsHandler::getPatientByUsername);
 
     }
 

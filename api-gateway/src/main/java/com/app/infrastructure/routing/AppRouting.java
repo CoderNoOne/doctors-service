@@ -15,7 +15,6 @@ public class AppRouting {
 
     @Bean
     public RouterFunction<ServerResponse> doctorsRoute(SecurityHandler securityHandler) {
-        return route(POST("security/login").and(accept(MediaType.APPLICATION_JSON)), securityHandler::login).
-                andRoute(GET("getUser/username/{username}").and(accept(MediaType.APPLICATION_JSON)), securityHandler::getUser);
+        return route(POST("security/login").and(accept(MediaType.APPLICATION_JSON)), securityHandler::login);
     }
 }

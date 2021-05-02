@@ -16,6 +16,13 @@ public class PatientsService {
     private final PatientRepository patientRepository;
 
     public Mono<Patient> savePatient(CreatePatientDto createPatientDto) {
-        return Mono.fromCompletionStage(patientRepository.add(createPatientDto.toEntity()));
+        var item = createPatientDto.toEntity();
+        return Mono.fromCompletionStage(patientRepository.add(item));
     }
+
+    public Mono<Patient> getByUsername(String username) {
+
+        return Mono.fromCompletionStage(() -> patientRepository.findByUsername(username));
+    }
+
 }

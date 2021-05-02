@@ -1,5 +1,6 @@
 package com.app.infrastructure.repository.impl;
 
+import com.app.application.dto.SearchByFieldValueDto;
 import com.app.domain.patient.Patient;
 import com.app.domain.patient.PatientRepository;
 import com.app.infrastructure.utils.DatabaseUtils;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 
 @Repository
 @RequiredArgsConstructor
@@ -49,4 +51,15 @@ public class PatientRepositoryImpl implements PatientRepository {
     public CompletionStage<List<Patient>> deleteAllById(List<Long> longs) {
         return null;
     }
+
+    public CompletionStage<Patient> findByUsername(String username) {
+        return databaseUtils
+                .findOneByFieldValue(SearchByFieldValueDto.<String>builder()
+                                .fieldName("username")
+                                .fieldValue(username)
+                                .build(),
+                        Patient.class
+                );
+    }
+
 }

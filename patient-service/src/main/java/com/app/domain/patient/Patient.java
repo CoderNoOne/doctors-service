@@ -20,6 +20,7 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "username")
     private String username;
 
     @Column(name = "first_name")
@@ -30,9 +31,8 @@ public class Patient {
 
     private Integer age;
 
-    @ElementCollection
-    @CollectionTable(name = "favorite_doctors", joinColumns = @JoinColumn(name = "patient_id", referencedColumnName = "id"))
-    @Column(name = "doctor_id")
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(schema = "reactive_db", name = "favorite_doctors", joinColumns = @JoinColumn(name = "patient_id", referencedColumnName = "id"))
     private Set<FavoriteDoctor> favoriteDoctors;
 
 
