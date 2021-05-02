@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,8 +32,15 @@ public class PatientRepositoryImpl implements PatientRepository {
     }
 
     @Override
-    public CompletionStage<Patient> findById(Long aLong) {
-        return null;
+    public CompletionStage<Patient> findById(Long id) {
+
+        return databaseUtils
+                .findOneByFieldValue(SearchByFieldValueDto.<Long>builder()
+                                .fieldName("id")
+                                .fieldValue(id)
+                                .build(),
+                        Patient.class
+                );
     }
 
     @Override

@@ -29,6 +29,9 @@ public class Patient {
     @Column(name = "last_name")
     private String lastName;
 
+    @Setter
+    private String password;
+
     private Integer age;
 
     @ElementCollection(fetch = FetchType.EAGER)

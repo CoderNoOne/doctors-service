@@ -3,6 +3,7 @@ package com.app.infrastructure.security;
 import com.app.application.dto.type.Role;
 import com.app.application.exception.AuthenticationException;
 import com.app.application.proxy.DoctorServiceProxy;
+import com.app.application.proxy.PatientServiceProxy;
 import com.app.infrastructure.security.tokens.AppTokensService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -23,7 +23,8 @@ import java.util.List;
 public class AuthenticationManager implements ReactiveAuthenticationManager {
 
     private final AppTokensService appTokensService;
-    private final DoctorServiceProxy proxy;
+    private final DoctorServiceProxy doctorServiceProxy;
+    private final PatientServiceProxy patientServiceProxy;
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
@@ -39,17 +40,20 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
                 return Mono.error(() -> new AuthenticationException("AUTH FAILED - NOT VALID ROLE"));
             }
 
+            var userId = Long.parseLong(appTokensService.getId(authentication.getCredentials().toString()));
+
             return (switch (Role.valueOf(role)) {
-                case ROLE_DOCTOR -> proxy
-                        .getDoctorById(Long.parseLong(appTokensService.getId(authentication.getCredentials().toString())))
-                        .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
-                        .map(userFromDb -> new UsernamePasswordAuthenticationToken(
-                                userFromDb.getUsername(),
-                                null,
-                                List.of(new SimpleGrantedAuthority(role)
-                                )));
-                case ROLE_PATIENT -> Mono.empty();
-            });
+                case ROLE_DOCTOR -> doctorServiceProxy
+                        .getDoctorById(userId);
+                case ROLE_PATIENT -> patientServiceProxy
+                        .getPatientById(userId);
+            })
+                    .switchIfEmpty(Mono.error(() -> new AuthenticationException("Wrong username")))
+                    .map(userFromDb -> new UsernamePasswordAuthenticationToken(
+                            userFromDb.getUsername(),
+                            null,
+                            List.of(new SimpleGrantedAuthority(role)
+                            )));
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);

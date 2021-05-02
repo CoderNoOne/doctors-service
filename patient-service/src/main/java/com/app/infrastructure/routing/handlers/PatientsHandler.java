@@ -34,4 +34,11 @@ public class PatientsHandler {
     }
 
 
+    public Mono<ServerResponse> getPatientById(ServerRequest serverRequest) {
+
+        return RoutingHandlersUtils.toServerResponse(
+                patientsService.getById(serverRequest.pathVariable("id")),
+                HttpStatus.OK
+        );
+    }
 }

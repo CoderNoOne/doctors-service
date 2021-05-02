@@ -23,6 +23,9 @@ public class CreatePatientDto {
     private String username;
 
     private String firstName;
+    private String password;
+    private String passwordConfirmation;
+
     private String lastName;
     private Integer age;
     private Set<FavoriteDoctor> favoriteDoctors;
@@ -33,6 +36,7 @@ public class CreatePatientDto {
                 .username(username)
                 .firstName(firstName)
                 .lastName(lastName)
+                .password(password)
                 .age(age)
                 .favoriteDoctors(Objects.nonNull(favoriteDoctors) ? favoriteDoctors : Collections.emptySet())
                 .build();

@@ -2,23 +2,20 @@ package com.app.infrastructure.routing.handlers;
 
 import com.app.application.dto.type.Role;
 import com.app.application.exception.AuthenticationException;
-import com.app.infrastructure.security.service.DoctorLoginService;
+import com.app.infrastructure.security.service.LoginService;
 import com.app.infrastructure.security.dto.AuthenticationDto;
 import com.app.infrastructure.security.tokens.AppTokensService;
 import com.app.infrastructure.utils.RoutingHandlersUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
@@ -26,7 +23,7 @@ import static java.util.Objects.isNull;
 @RequiredArgsConstructor
 public class SecurityHandler {
 
-    private final DoctorLoginService doctorLoginService;
+    private final LoginService loginService;
     private final PasswordEncoder passwordEncoder;
     private final AppTokensService appTokensService;
 
@@ -45,7 +42,7 @@ public class SecurityHandler {
                             }
                             return dto;
                         })
-                        .flatMap(authenticationDto -> doctorLoginService
+                        .flatMap(authenticationDto -> loginService
                                 .findByUsername(authenticationDto.getUsername(), Role.valueOf(authenticationDto.getRole()))
                                 .filter(user -> passwordEncoder.matches(authenticationDto.getPassword(), user.getPassword())))
                         .switchIfEmpty(Mono.error(() -> new AuthenticationException("Provide valid credentials")))
@@ -58,7 +55,7 @@ public class SecurityHandler {
     public Mono<ServerResponse> getUser(ServerRequest serverRequest) {
 
         return RoutingHandlersUtils.toServerResponse(
-                doctorLoginService.findByUsername(serverRequest.pathVariable("username"), Role.ROLE_DOCTOR),
+                loginService.findByUsername(serverRequest.pathVariable("username"), Role.ROLE_DOCTOR),
                 HttpStatus.OK);
     }
 }

@@ -17,13 +17,21 @@ public class PatientServiceProxy {
 
     public PatientServiceProxy(final WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
-                .baseUrl("http://%s:9000/patients".formatted("local".equalsIgnoreCase(profile) ? "localhost": "patients-service"))                .build();
+                .baseUrl("http://%s:9000/patients".formatted("local".equalsIgnoreCase(profile) ? "localhost" : "patients-service")).build();
     }
 
     public Mono<GetUserDto> getPatientByUsername(String username) {
         return webClient
                 .get()
                 .uri("/username/" + username)
+                .retrieve()
+                .bodyToMono(GetUserDto.class);
+    }
+
+    public Mono<GetUserDto> getPatientById(long userId) {
+        return webClient
+                .get()
+                .uri("id/" + userId)
                 .retrieve()
                 .bodyToMono(GetUserDto.class);
     }
