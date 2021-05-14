@@ -16,7 +16,7 @@ public class AppRouting {
 
     @Bean
     public RouterFunction<ServerResponse> doctorsRoute(DoctorsHandler doctorsHandler) {
-        return route(POST("/register").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::addDoctor)
+        return route(POST("/doctors/save").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::addDoctor)
                 .andRoute(GET("/doctors/{id}").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getDoctorById)
                 .andRoute(GET("/doctors/all/byIds").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getAllByIds)
                 .andRoute(GET("/doctors/{id}/professions").and(accept(MediaType.APPLICATION_JSON)), doctorsHandler::getProfessionsByDoctorId)

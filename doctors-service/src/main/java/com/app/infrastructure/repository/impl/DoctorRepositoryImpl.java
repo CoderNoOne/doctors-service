@@ -7,7 +7,6 @@ import com.app.domain.doctor.DoctorRepository;
 import com.app.infrastructure.enums.DoctorsFieldsToFetch;
 import com.app.infrastructure.utils.DatabaseUtils;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

@@ -9,6 +9,9 @@ import org.hibernate.reactive.stage.Stage;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;

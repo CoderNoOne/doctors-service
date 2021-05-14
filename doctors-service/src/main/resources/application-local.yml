@@ -1,9 +1,12 @@
 server:
-  port: 8100
+  port: 8102
 
 spring:
   application:
     name: doctors-service
+
+  config:
+    import: optional:configserver:http://localhost:8888
 
 eureka:
   client:

@@ -108,11 +108,13 @@ public class WebSecurityConfig {
                 .authorizeExchange()
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .pathMatchers("/security/login").permitAll()
-                .pathMatchers("/doctors/register").permitAll()
+                .pathMatchers("/doctors/save").permitAll()
                 .pathMatchers("/patients/register").permitAll()
 
-                .pathMatchers("/doctors/**").hasRole("DOCTOR")
-                .pathMatchers("/patients/**").hasRole("PATIENT")
+//                .pathMatchers("/doctors/**").hasRole("DOCTOR")
+//                .pathMatchers("/patients/**").hasRole("PATIENT")
+                .pathMatchers("/doctors/**").permitAll()
+                .pathMatchers("/patients/**").permitAll()
 
                 .pathMatchers("/docs/**").permitAll()
                 .pathMatchers("/v3/api-docs/**").permitAll()
